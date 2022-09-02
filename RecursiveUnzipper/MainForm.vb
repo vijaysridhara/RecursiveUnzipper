@@ -44,6 +44,7 @@ Public Class MainForm
         End If
         cancelRequested = False
         butCancel.Enabled = True
+        butUnzip.Enabled = False
         Application.DoEvents()
         LogMessage("Started **************")
         System.IO.Directory.Delete(unzipFolder, True)
@@ -62,12 +63,14 @@ Public Class MainForm
             LogMessage(ex.Message)
             LogMessage("Stopped **************")
             butCancel.Enabled = False
+            butUnzip.Enabled = True
             Exit Sub
         End Try
         CopyToFolder(unzipFolder, extrPath)
         System.IO.Directory.Delete(unzipFolder, True)
         LogMessage("Completed successfully **************")
         butCancel.Enabled = False
+        butUnzip.Enabled = True
     End Sub
     Private Sub LogMessage(msg As String)
         Application.DoEvents()
