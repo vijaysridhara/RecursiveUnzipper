@@ -32,7 +32,7 @@ Namespace My
         
         <Global.System.Diagnostics.DebuggerStepThroughAttribute()>  _
         Protected Overrides Sub OnCreateMainForm()
-            Me.MainForm = Global.RecursiveUnzipper.MainForm
+            Me.MainForm = Global.VijaySridhara.Applications.MainForm
         End Sub
     End Class
 End Namespace

@@ -10,6 +10,7 @@
     <Version>0.1</Version>
     <Authors>Vijay Sridhara</Authors>
     <Copyright>Vijay Sridhara</Copyright>
+    <RootNamespace>VijaySridhara.Applications</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
