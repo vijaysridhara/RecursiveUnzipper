@@ -18,6 +18,7 @@ Imports SevenZipExtractor
 Public Class MainForm
     Private unzipFolder As String
     Dim selfile As String
+    Dim cancelRequested As Boolean = False
     Private Sub butUnzip_Click(sender As Object, e As EventArgs) Handles butUnzip.Click
         unzipFolder = My.Computer.FileSystem.SpecialDirectories.Temp & "\temp00000unzip"
         If IO.File.Exists(txtZip.Text) = False Then
@@ -41,6 +42,9 @@ Public Class MainForm
             IO.Directory.CreateDirectory(unzipFolder)
 
         End If
+        cancelRequested = False
+        butCancel.Enabled = True
+        Application.DoEvents()
         LogMessage("Started **************")
         System.IO.Directory.Delete(unzipFolder, True)
         Dim zippath As String = txtZip.Text
@@ -57,25 +61,32 @@ Public Class MainForm
         Catch ex As Exception
             LogMessage(ex.Message)
             LogMessage("Stopped **************")
+            butCancel.Enabled = False
             Exit Sub
         End Try
         CopyToFolder(unzipFolder, extrPath)
         System.IO.Directory.Delete(unzipFolder, True)
         LogMessage("Completed successfully **************")
+        butCancel.Enabled = False
     End Sub
     Private Sub LogMessage(msg As String)
+        Application.DoEvents()
         txtLog.Text += msg & vbCrLf
         txtLog.SelectionStart = txtLog.TextLength
         txtLog.ScrollToCaret()
         txtLog.Refresh()
     End Sub
     Private Sub CopyToFolder(tempFolder As String, outputFolder As String)
+        If cancelRequested Then Exit Sub
         LogMessage("Checking " & tempFolder)
+
         Try
             Dim fls() As String = IO.Directory.GetFiles(tempFolder, "*.zip")
 
             For Each f As String In fls
+                If cancelRequested Then Exit Sub
                 LogMessage("Found zip file " & f)
+
                 Try
                     ZipFile.ExtractToDirectory(f, tempFolder)
                 Catch ex As Exception
@@ -87,6 +98,7 @@ Public Class MainForm
             Next
             fls = IO.Directory.GetFiles(tempFolder, "*.rar")
             For Each f As String In fls
+                If cancelRequested Then Exit Sub
                 LogMessage("Found rar file " & f)
                 Try
                     Dim unra As New SevenZipExtractor.ArchiveFile(f)
@@ -103,6 +115,7 @@ Public Class MainForm
             LogMessage("Found " & fls.Length & " jpg files in " & tempFolder)
 
             Try
+
                 If Not IO.Directory.Exists(outputFolder) Then
                     IO.Directory.CreateDirectory(outputFolder)
 
@@ -112,6 +125,7 @@ Public Class MainForm
             End Try
 
             For Each f As String In fls
+                If cancelRequested Then Exit Sub
                 Try
 
                     IO.File.Copy(f, outputFolder & "\" & IO.Path.GetFileName(f))
@@ -123,10 +137,10 @@ Public Class MainForm
             fls = IO.Directory.GetFiles(tempFolder, "*.png")
             LogMessage("Found " & fls.Length & " png files in " & tempFolder)
             For Each f As String In fls
-
+                If cancelRequested Then Exit Sub
                 Try
 
-                    IO.File.Copy(f, outputFolder & "\" & IO.Path.GetFileName(f))
+                    If Not IO.File.Exists(outputFolder & "\" & IO.Path.GetFileName(f)) Then IO.File.Copy(f, outputFolder & "\" & IO.Path.GetFileName(f))
                 Catch ex As Exception
                     LogMessage(ex.Message)
                 End Try
@@ -134,24 +148,27 @@ Public Class MainForm
             fls = IO.Directory.GetFiles(tempFolder, "*.bmp")
             LogMessage("Found " & fls.Length & " bmp files in " & tempFolder)
             For Each f As String In fls
+                If cancelRequested Then Exit Sub
                 If Not IO.Directory.Exists(outputFolder) Then
                     IO.Directory.CreateDirectory(outputFolder)
 
                 End If
-                IO.File.Copy(f, outputFolder & "\" & IO.Path.GetFileName(f))
+                If Not IO.File.Exists(outputFolder & "\" & IO.Path.GetFileName(f)) Then IO.File.Copy(f, outputFolder & "\" & IO.Path.GetFileName(f))
             Next
             fls = IO.Directory.GetFiles(tempFolder, "*.ico")
             LogMessage("Found " & fls.Length & " ico files in " & tempFolder)
             For Each f As String In fls
+                If cancelRequested Then Exit Sub
                 If Not IO.Directory.Exists(outputFolder) Then
                     IO.Directory.CreateDirectory(outputFolder)
 
                 End If
-                IO.File.Copy(f, outputFolder & "\" & IO.Path.GetFileName(f))
+                If Not IO.File.Exists(outputFolder & "\" & IO.Path.GetFileName(f)) Then IO.File.Copy(f, outputFolder & "\" & IO.Path.GetFileName(f))
             Next
             Dim dis() As String = IO.Directory.GetDirectories(tempFolder)
             LogMessage("Found " & dis.Length & " directories in " & tempFolder)
             For Each di As String In dis
+                If cancelRequested Then Exit Sub
                 If IO.Directory.Exists(outputFolder & "\" & IO.Path.GetFileName(di)) = False Then
                     IO.Directory.CreateDirectory(outputFolder & "\" & IO.Path.GetFileName(di))
                 End If
@@ -171,7 +188,7 @@ Public Class MainForm
             .Filter = "Zip files|*.zip|Rar files|*.rar"
             If .ShowDialog = DialogResult.OK Then
                 txtZip.Text = .FileName
-                My.Settings.ZipLocation = IO.Path.GetInvalidFileNameChars(.FileName)
+                My.Settings.ZipLocation = IO.Path.GetDirectoryName(.FileName)
                 My.Settings.Save()
             End If
             If .FilterIndex = 0 Then
@@ -192,6 +209,13 @@ Public Class MainForm
                 My.Settings.Save()
             End If
         End With
+
+    End Sub
+
+    Private Sub butCancel_Click(sender As Object, e As EventArgs) Handles butCancel.Click
+        cancelRequested = True
+        LogMessage("Cancel requested...")
+        butCancel.Enabled = False
 
     End Sub
 End Class

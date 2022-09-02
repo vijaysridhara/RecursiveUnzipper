@@ -28,13 +28,14 @@ Partial Class MainForm
         Me.butSelectOutput = New System.Windows.Forms.Button()
         Me.butUnzip = New System.Windows.Forms.Button()
         Me.txtLog = New System.Windows.Forms.TextBox()
-        Me.SuspendLayout
+        Me.butCancel = New System.Windows.Forms.Button()
+        Me.SuspendLayout()
         '
         'txtZip
         '
         Me.txtZip.Location = New System.Drawing.Point(35, 18)
         Me.txtZip.Name = "txtZip"
-        Me.txtZip.ReadOnly = true
+        Me.txtZip.ReadOnly = True
         Me.txtZip.Size = New System.Drawing.Size(268, 23)
         Me.txtZip.TabIndex = 0
         '
@@ -45,13 +46,13 @@ Partial Class MainForm
         Me.butSelectFile.Size = New System.Drawing.Size(119, 31)
         Me.butSelectFile.TabIndex = 1
         Me.butSelectFile.Text = "Select zip file"
-        Me.butSelectFile.UseVisualStyleBackColor = true
+        Me.butSelectFile.UseVisualStyleBackColor = True
         '
         'txtOutput
         '
         Me.txtOutput.Location = New System.Drawing.Point(35, 52)
         Me.txtOutput.Name = "txtOutput"
-        Me.txtOutput.ReadOnly = true
+        Me.txtOutput.ReadOnly = True
         Me.txtOutput.Size = New System.Drawing.Size(268, 23)
         Me.txtOutput.TabIndex = 2
         '
@@ -80,11 +81,22 @@ Partial Class MainForm
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtLog.Font = New System.Drawing.Font("Lucida Console", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point)
         Me.txtLog.Location = New System.Drawing.Point(12, 84)
+        Me.txtLog.MaxLength = 6576700
         Me.txtLog.Multiline = True
         Me.txtLog.Name = "txtLog"
         Me.txtLog.ReadOnly = True
         Me.txtLog.Size = New System.Drawing.Size(542, 300)
         Me.txtLog.TabIndex = 5
+        '
+        'butCancel
+        '
+        Me.butCancel.Enabled = False
+        Me.butCancel.Location = New System.Drawing.Point(435, 7)
+        Me.butCancel.Name = "butCancel"
+        Me.butCancel.Size = New System.Drawing.Size(119, 31)
+        Me.butCancel.TabIndex = 1
+        Me.butCancel.Text = "Cancel operation"
+        Me.butCancel.UseVisualStyleBackColor = True
         '
         'MainForm
         '
@@ -93,6 +105,7 @@ Partial Class MainForm
         Me.ClientSize = New System.Drawing.Size(582, 396)
         Me.Controls.Add(Me.butUnzip)
         Me.Controls.Add(Me.butSelectOutput)
+        Me.Controls.Add(Me.butCancel)
         Me.Controls.Add(Me.butSelectFile)
         Me.Controls.Add(Me.txtLog)
         Me.Controls.Add(Me.txtOutput)
@@ -111,4 +124,5 @@ End Sub
     Friend WithEvents butSelectOutput As Button
     Friend WithEvents butUnzip As Button
     Friend WithEvents txtLog As TextBox
+    Friend WithEvents butCancel As Button
 End Class
