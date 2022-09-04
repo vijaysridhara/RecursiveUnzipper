@@ -7,7 +7,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <MyType>WindowsForms</MyType>
     <ApplicationManifest>My Project\app.manifest</ApplicationManifest>
-    <Version>0.2</Version>
+    <Version>0.2.1</Version>
     <Authors>Vijay Sridhara</Authors>
     <Copyright>Vijay Sridhara</Copyright>
     <RootNamespace>VijaySridhara.Applications</RootNamespace>

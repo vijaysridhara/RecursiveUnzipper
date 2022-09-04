@@ -86,7 +86,7 @@ Public Class MainForm
             If chkRemoveparent.Checked Then
                 Dim dirs() As String = IO.Directory.GetDirectories(unzipFolder)
                 If dirs.Length = 1 Then
-                    Dim fls() As String = IO.Directory.GetFileSystemEntries(unzipFolder, "*.*")
+                    Dim fls() As String = IO.Directory.GetFiles(unzipFolder, "*.*")
                     If fls.Length = 0 Or chkIgnoreifFilesPresent.Checked Then
                         passpath = dirs(0)
                     End If
