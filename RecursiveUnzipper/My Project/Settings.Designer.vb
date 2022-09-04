@@ -77,6 +77,42 @@ Namespace My
                 Me("OutputLocation") = value
             End Set
         End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("*.*")>  _
+        Public Property Filters() As String
+            Get
+                Return CType(Me("Filters"),String)
+            End Get
+            Set
+                Me("Filters") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+        Public Property Overwrite() As Boolean
+            Get
+                Return CType(Me("Overwrite"),Boolean)
+            End Get
+            Set
+                Me("Overwrite") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+        Public Property IgnoreFolderZips() As Boolean
+            Get
+                Return CType(Me("IgnoreFolderZips"),Boolean)
+            End Get
+            Set
+                Me("IgnoreFolderZips") = value
+            End Set
+        End Property
     End Class
 End Namespace
 
@@ -86,8 +122,8 @@ Namespace My
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Runtime.CompilerServices.CompilerGeneratedAttribute()>  _
     Friend Module MySettingsProperty
-
-        <Global.System.ComponentModel.Design.HelpKeywordAttribute("My.Settings")>
+        
+        <Global.System.ComponentModel.Design.HelpKeywordAttribute("My.Settings")>  _
         Friend ReadOnly Property Settings() As Global.VijaySridhara.Applications.My.MySettings
             Get
                 Return Global.VijaySridhara.Applications.My.MySettings.Default

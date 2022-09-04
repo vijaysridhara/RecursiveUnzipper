@@ -19,14 +19,15 @@ Public Class MainForm
     Private unzipFolder As String
     Dim selfile As String
     Dim cancelRequested As Boolean = False
+    Dim filters As New List(Of String)
     Private Sub butUnzip_Click(sender As Object, e As EventArgs) Handles butUnzip.Click
-        unzipFolder = My.Computer.FileSystem.SpecialDirectories.Temp & "\temp00000unzip"
-        If IO.File.Exists(txtZip.Text) = False Then
-            LogMessage("The file doesn't exist: " & txtZip.Text)
+        unzipFolder = My.Computer.FileSystem.SpecialDirectories.Temp & "\temp00000recurunzip"
+        If IO.Directory.Exists(txtZip.Text) = False Then
+            LogMessage("The input directory doesn't exist: " & txtZip.Text)
             Exit Sub
         End If
         If String.IsNullOrEmpty(txtZip.Text) Then
-            LogMessage("First select a file to unzip(zip, or rar)")
+            LogMessage("First select a folder that contains to unzip(zip, or rar)")
             Exit Sub
         End If
         If String.IsNullOrEmpty(txtOutput.Text) Then
@@ -38,6 +39,16 @@ Public Class MainForm
             Exit Sub
 
         End If
+        If String.IsNullOrEmpty(txtFilters.Text) Then
+            LogMessage("You should specify one or more filters like *.jpg, *.png. Or for all files *.*")
+            Exit Sub
+        End If
+        If lstZipfiles.SelectedItems.Count = 0 Then
+            LogMessage("You must select at least one zip/rar file to process, from the list on left. Hold control to select multiple")
+            Exit Sub
+        End If
+        filters.Clear()
+        filters.AddRange(txtFilters.Text.Split(","))
         If Not IO.Directory.Exists(unzipFolder) Then
             IO.Directory.CreateDirectory(unzipFolder)
 
@@ -47,27 +58,43 @@ Public Class MainForm
         butUnzip.Enabled = False
         Application.DoEvents()
         LogMessage("Started **************")
+        LogMessage("Processing " & lstZipfiles.SelectedItems.Count & " items")
         System.IO.Directory.Delete(unzipFolder, True)
         Dim zippath As String = txtZip.Text
-        IO.Directory.CreateDirectory(unzipFolder)
-        Dim extrPath As String = txtOutput.Text
-        Try
-            If selfile = "zip" Then
-                ZipFile.ExtractToDirectory(zippath, unzipFolder)
-            Else
-                Dim unra As New SevenZipExtractor.ArchiveFile(zippath)
-                unra.Extract(unzipFolder, True)
-                unra.Dispose()
+        For Each f As String In lstZipfiles.SelectedItems
+            zippath = txtZip.Text & "\" & f
+            IO.Directory.CreateDirectory(unzipFolder)
+            Dim extrPath As String = txtOutput.Text
+            selfile = IIf(IO.Path.GetExtension(zippath) = ".zip", "zip", "rar")
+            Try
+                If cancelRequested Then
+                    LogMessage("Cancel requested...")
+                    LogMessage("Stopped *************")
+                    Exit Sub
+                End If
+                If selfile = "zip" Then
+                    ZipFile.ExtractToDirectory(zippath, unzipFolder)
+                Else
+                    Dim unra As New SevenZipExtractor.ArchiveFile(zippath)
+                    unra.Extract(unzipFolder, True)
+                    unra.Dispose()
+                End If
+            Catch ex As Exception
+                LogMessage(ex.Message)
+            End Try
+            Dim passpath As String = unzipFolder
+            If chkRemoveparent.Checked Then
+                Dim dirs() As String = IO.Directory.GetDirectories(unzipFolder)
+                If dirs.Length = 1 Then
+                    Dim fls() As String = IO.Directory.GetFileSystemEntries(unzipFolder, "*.*")
+                    If fls.Length = 0 Or chkIgnoreifFilesPresent.Checked Then
+                        passpath = dirs(0)
+                    End If
+                End If
             End If
-        Catch ex As Exception
-            LogMessage(ex.Message)
-            LogMessage("Stopped **************")
-            butCancel.Enabled = False
-            butUnzip.Enabled = True
-            Exit Sub
-        End Try
-        CopyToFolder(unzipFolder, extrPath)
-        System.IO.Directory.Delete(unzipFolder, True)
+            CopyToFolder(passpath, extrPath)
+            System.IO.Directory.Delete(unzipFolder, True)
+        Next
         LogMessage("Completed successfully **************")
         butCancel.Enabled = False
         butUnzip.Enabled = True
@@ -114,59 +141,25 @@ Public Class MainForm
                 End Try
 
             Next
-            fls = IO.Directory.GetFiles(tempFolder, "*.jpg")
-            LogMessage("Found " & fls.Length & " jpg files in " & tempFolder)
-
-            Try
-
-                If Not IO.Directory.Exists(outputFolder) Then
-                    IO.Directory.CreateDirectory(outputFolder)
-
-                End If
-            Catch ex As Exception
-                LogMessage(ex.Message)
-            End Try
-
-            For Each f As String In fls
-                If cancelRequested Then Exit Sub
+            For Each fil As String In filters
+                fls = IO.Directory.GetFiles(tempFolder, fil)
+                LogMessage("Found " & fls.Length & fil & " files in " & tempFolder)
                 Try
-
-                    IO.File.Copy(f, outputFolder & "\" & IO.Path.GetFileName(f))
+                    If Not IO.Directory.Exists(outputFolder) Then
+                        IO.Directory.CreateDirectory(outputFolder)
+                    End If
                 Catch ex As Exception
                     LogMessage(ex.Message)
                 End Try
+                For Each f As String In fls
+                    If cancelRequested Then Exit Sub
+                    Try
+                        IO.File.Copy(f, outputFolder & "\" & IO.Path.GetFileName(f), chkOverwrite.Checked)
+                    Catch ex As Exception
+                        LogMessage(ex.Message)
+                    End Try
 
-            Next
-            fls = IO.Directory.GetFiles(tempFolder, "*.png")
-            LogMessage("Found " & fls.Length & " png files in " & tempFolder)
-            For Each f As String In fls
-                If cancelRequested Then Exit Sub
-                Try
-
-                    If Not IO.File.Exists(outputFolder & "\" & IO.Path.GetFileName(f)) Then IO.File.Copy(f, outputFolder & "\" & IO.Path.GetFileName(f))
-                Catch ex As Exception
-                    LogMessage(ex.Message)
-                End Try
-            Next
-            fls = IO.Directory.GetFiles(tempFolder, "*.bmp")
-            LogMessage("Found " & fls.Length & " bmp files in " & tempFolder)
-            For Each f As String In fls
-                If cancelRequested Then Exit Sub
-                If Not IO.Directory.Exists(outputFolder) Then
-                    IO.Directory.CreateDirectory(outputFolder)
-
-                End If
-                If Not IO.File.Exists(outputFolder & "\" & IO.Path.GetFileName(f)) Then IO.File.Copy(f, outputFolder & "\" & IO.Path.GetFileName(f))
-            Next
-            fls = IO.Directory.GetFiles(tempFolder, "*.ico")
-            LogMessage("Found " & fls.Length & " ico files in " & tempFolder)
-            For Each f As String In fls
-                If cancelRequested Then Exit Sub
-                If Not IO.Directory.Exists(outputFolder) Then
-                    IO.Directory.CreateDirectory(outputFolder)
-
-                End If
-                If Not IO.File.Exists(outputFolder & "\" & IO.Path.GetFileName(f)) Then IO.File.Copy(f, outputFolder & "\" & IO.Path.GetFileName(f))
+                Next
             Next
             Dim dis() As String = IO.Directory.GetDirectories(tempFolder)
             LogMessage("Found " & dis.Length & " directories in " & tempFolder)
@@ -177,6 +170,7 @@ Public Class MainForm
                 End If
                 CopyToFolder(di, outputFolder & "\" & IO.Path.GetFileName(di))
             Next
+
         Catch ex As Exception
             LogMessage(ex.Message)
         End Try
@@ -185,19 +179,28 @@ Public Class MainForm
     End Sub
 
     Private Sub butSelectFile_Click(sender As Object, e As EventArgs) Handles butSelectFile.Click
-        Dim selfdg As New OpenFileDialog
+        Dim selfdg As New FolderBrowserDialog
         With selfdg
             .InitialDirectory = My.Settings.ZipLocation
-            .Filter = "Zip files|*.zip|Rar files|*.rar"
+
             If .ShowDialog = DialogResult.OK Then
-                txtZip.Text = .FileName
-                My.Settings.ZipLocation = IO.Path.GetDirectoryName(.FileName)
+                txtZip.Text = .SelectedPath
+                My.Settings.ZipLocation = .SelectedPath
                 My.Settings.Save()
             End If
-            If .FilterIndex = 0 Then
-                selfile = "zip"
+            lstZipfiles.Items.Clear()
+            Dim zipfiles() As String = IO.Directory.GetFiles(selfdg.SelectedPath, "*.zip")
+            For Each z As String In zipfiles
+                lstZipfiles.Items.Add(IO.Path.GetFileName(z))
+            Next
+            Dim rarFiles() As String = IO.Directory.GetFiles(selfdg.SelectedPath, "*.rar")
+            For Each r As String In rarFiles
+                lstZipfiles.Items.Add(IO.Path.GetFileName(r))
+            Next
+            If lstZipfiles.Items.Count > 0 And IO.Directory.Exists(txtOutput.Text) Then
+                butUnzip.Enabled = True
             Else
-                selfile = "rar"
+                butUnzip.Enabled = False
             End If
         End With
     End Sub
@@ -210,6 +213,11 @@ Public Class MainForm
                 txtOutput.Text = .SelectedPath
                 My.Settings.OutputLocation = .SelectedPath
                 My.Settings.Save()
+                If lstZipfiles.Items.Count > 0 And IO.Directory.Exists(txtOutput.Text) Then
+                    butUnzip.Enabled = True
+                Else
+                    butUnzip.Enabled = False
+                End If
             End If
         End With
 
@@ -220,5 +228,36 @@ Public Class MainForm
         LogMessage("Cancel requested...")
         butCancel.Enabled = False
 
+    End Sub
+
+    Private Sub Label1_Click(sender As Object, e As EventArgs) Handles Label1.Click
+
+    End Sub
+
+    Private Sub chkOverwrite_CheckedChanged(sender As Object, e As EventArgs) Handles chkOverwrite.CheckedChanged
+
+    End Sub
+
+    Private Sub MainForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        chkOverwrite.Checked = My.Settings.Overwrite
+        txtFilters.Text = My.Settings.Filters
+        chkRemoveparent.Checked = My.Settings.IgnoreFolderZips
+
+    End Sub
+
+    Private Sub MainForm_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
+        My.Settings.Overwrite = chkOverwrite.Checked
+        My.Settings.Filters = txtFilters.Text
+        My.Settings.IgnoreFolderZips = chkRemoveparent.Checked
+        My.Settings.Save()
+    End Sub
+
+    Private Sub chkRemoveparent_CheckedChanged(sender As Object, e As EventArgs) Handles chkRemoveparent.CheckedChanged
+        If chkRemoveparent.Checked Then
+            chkIgnoreifFilesPresent.Enabled = True
+        Else
+            chkIgnoreifFilesPresent.Enabled = False
+
+        End If
     End Sub
 End Class
