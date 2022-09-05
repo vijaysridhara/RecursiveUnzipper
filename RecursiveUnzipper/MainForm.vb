@@ -66,6 +66,7 @@ Public Class MainForm
             IO.Directory.CreateDirectory(unzipFolder)
             Dim extrPath As String = txtOutput.Text
             selfile = IIf(IO.Path.GetExtension(zippath) = ".zip", "zip", "rar")
+
             Try
                 If cancelRequested Then
                     LogMessage("Cancel requested...")
@@ -143,7 +144,9 @@ Public Class MainForm
             Next
             For Each fil As String In filters
                 fls = IO.Directory.GetFiles(tempFolder, fil)
+
                 LogMessage("Found " & fls.Length & fil & " files in " & tempFolder)
+
                 Try
                     If Not IO.Directory.Exists(outputFolder) Then
                         IO.Directory.CreateDirectory(outputFolder)
@@ -152,6 +155,7 @@ Public Class MainForm
                     LogMessage(ex.Message)
                 End Try
                 For Each f As String In fls
+                    If IO.Path.GetExtension(f) = ".zip" Or IO.Path.GetExtension(f) = ".rar" Then Continue For
                     If cancelRequested Then Exit Sub
                     Try
                         IO.File.Copy(f, outputFolder & "\" & IO.Path.GetFileName(f), chkOverwrite.Checked)
